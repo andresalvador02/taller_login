@@ -1,16 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8" />
     <title>Login</title>
 </head>
 <body>
-    <h2>Inicio de sesión</h2>
-    <form method="POST">
-        Usuario: <input type="text" name="usuario" required><br><br>
-        Contraseña: <input type="password" name="clave" required><br><br>
-        <input type="submit" value="Ingresar">
+    <h2>Iniciar sesión</h2>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul style="color:red;">
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    <form method="post" action="/login">
+        <label for="correo">Correo:</label><br/>
+        <input type="email" name="correo" id="correo" required /><br/><br/>
+
+        <label for="clave">Contraseña:</label><br/>
+        <input type="password" name="clave" id="clave" required /><br/><br/>
+
+        <button type="submit">Entrar</button>
     </form>
-    <a href="/registro">Registrarse</a><br>
-    <a href="/recuperar">¿Olvidaste tu contraseña?</a>
+    <p><a href="/registro">Registrar nuevo usuario</a></p>
+    <p><a href="/recuperar">¿Olvidaste tu contraseña?</a></p>
 </body>
 </html>

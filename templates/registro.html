@@ -1,17 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8" />
     <title>Registro</title>
 </head>
 <body>
-    <h2>Registro de usuario</h2>
-    <form method="POST">
-        Usuario: <input type="text" name="usuario" required><br><br>
-        Correo: <input type="email" name="correo" required><br><br>
-        Contraseña: <input type="password" name="clave" required><br><br>
-        <p>La contraseña debe tener al menos una mayúscula, una minúscula y un carácter especial.</p>
-        <input type="submit" value="Registrarse">
+    <h2>Registro</h2>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul style="color:red;">
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    <form method="post" action="/registro">
+        <label for="correo">Correo:</label><br/>
+        <input type="email" name="correo" id="correo" required /><br/><br/>
+
+        <label for="clave">Contraseña:</label><br/>
+        <input type="password" name="clave" id="clave" required /><br/>
+        <small>La contraseña debe tener al menos una mayúscula, una minúscula, un carácter especial y mínimo 6 caracteres.</small><br/><br/>
+
+        <button type="submit">Registrar</button>
     </form>
-    <a href="/login">Iniciar sesión</a>
+    <p><a href="/login">Volver a iniciar sesión</a></p>
 </body>
 </html>

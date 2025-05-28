@@ -1,32 +1,59 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session, flash
 import sqlite3
 import os
 import re
 import random
+import string
+from flask_mail import Mail, Message
 
 app = Flask(__name__)
 app.secret_key = 'secreto123'
 
-# Simulación de envío de correo con código
-codes = {}  # correo -> código temporal
+# Configuración de Flask-Mail con Gmail SMTP
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'andretellos@gmail.com'  # Tu correo Gmail real
+app.config['MAIL_PASSWORD'] = 'xtmmeidirxfindgw'       # Tu contraseña de aplicación sin espacios
+app.config['MAIL_DEFAULT_SENDER'] = 'andretellos@gmail.com'  # Igual que MAIL_USERNAME
+
+mail = Mail(app)
+
+# Para guardar códigos temporales para recuperación de contraseña
+recuperacion_codigos = {}
 
 def crear_db():
     conn = sqlite3.connect('usuarios.db')
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS usuarios (
-                    id INTEGER PRIMARY KEY,
-                    username TEXT UNIQUE,
-                    correo TEXT UNIQUE,
-                    password TEXT)''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id INTEGER PRIMARY KEY,
+            correo TEXT UNIQUE,
+            password TEXT
+        )
+    ''')
     conn.commit()
     conn.close()
 
 crear_db()
 
-def validar_contraseña(password):
-    return (re.search(r'[A-Z]', password) and
-            re.search(r'[a-z]', password) and
-            re.search(r'[^a-zA-Z0-9]', password))
+def validar_password(pw):
+    # Debe contener al menos una mayúscula, una minúscula y un carácter especial
+    if (len(pw) < 6):  # mínimo 6 caracteres
+        return False
+    if not re.search(r'[A-Z]', pw):
+        return False
+    if not re.search(r'[a-z]', pw):
+        return False
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', pw):
+        return False
+    return True
+
+def enviar_codigo(correo, codigo):
+    msg = Message('Código de recuperación de contraseña',
+                  recipients=[correo])
+    msg.body = f'Tu código para recuperar la contraseña es: {codigo}'
+    mail.send(msg)
 
 @app.route('/')
 def inicio():
@@ -35,39 +62,55 @@ def inicio():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        usuario = request.form['usuario']
+        correo = request.form['correo']
         clave = request.form['clave']
         conn = sqlite3.connect('usuarios.db')
         c = conn.cursor()
-        c.execute('SELECT * FROM usuarios WHERE username=? AND password=?', (usuario, clave))
+        c.execute('SELECT * FROM usuarios WHERE correo=? AND password=?', (correo, clave))
         data = c.fetchone()
         conn.close()
         if data:
-            session['usuario'] = usuario
+            session['correo'] = correo
             return redirect('/bienvenido')
         else:
-            return "Credenciales incorrectas"
+            flash("Credenciales incorrectas")
     return render_template('login.html')
 
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
     if request.method == 'POST':
-        usuario = request.form['usuario']
         correo = request.form['correo']
         clave = request.form['clave']
-        if not validar_contraseña(clave):
-            return "La contraseña debe tener al menos una mayúscula, una minúscula y un carácter especial."
+
+        if not validar_password(clave):
+            flash("La contraseña debe tener al menos una mayúscula, una minúscula, un carácter especial y mínimo 6 caracteres.")
+            return redirect('/registro')
+
         conn = sqlite3.connect('usuarios.db')
         c = conn.cursor()
         try:
-            c.execute('INSERT INTO usuarios (username, correo, password) VALUES (?, ?, ?)', (usuario, correo, clave))
+            c.execute('INSERT INTO usuarios (correo, password) VALUES (?, ?)', (correo, clave))
             conn.commit()
+            flash("Registro exitoso, ya puedes iniciar sesión")
         except sqlite3.IntegrityError:
-            return "El usuario o correo ya existe."
+            flash("El correo ya está registrado.")
+            return redirect('/registro')
         finally:
             conn.close()
         return redirect('/login')
     return render_template('registro.html')
+
+@app.route('/bienvenido')
+def bienvenido():
+    if 'correo' in session:
+        return f"Hola {session['correo']}! <a href='/logout'>Cerrar sesión</a>"
+    else:
+        return redirect('/login')
+
+@app.route('/logout')
+def logout():
+    session.pop('correo', None)
+    return redirect('/login')
 
 @app.route('/recuperar', methods=['GET', 'POST'])
 def recuperar():
@@ -76,53 +119,53 @@ def recuperar():
         conn = sqlite3.connect('usuarios.db')
         c = conn.cursor()
         c.execute('SELECT * FROM usuarios WHERE correo=?', (correo,))
-        user = c.fetchone()
+        data = c.fetchone()
         conn.close()
-        if user:
-            codigo = str(random.randint(100000, 999999))
-            codes[correo] = codigo
-            print(f'Código de recuperación para {correo}: {codigo}')  # Simulación de envío de correo
-            return redirect(url_for('verificar_codigo', correo=correo))
+        if data:
+            codigo = ''.join(random.choices(string.digits, k=6))
+            recuperacion_codigos[correo] = codigo
+            try:
+                enviar_codigo(correo, codigo)
+                flash("Código enviado a tu correo.")
+                return redirect(f'/validar_codigo?correo={correo}')
+            except Exception as e:
+                flash(f"Error al enviar correo: {e}")
         else:
-            return "Correo no encontrado."
+            flash("Correo no registrado.")
     return render_template('recuperar.html')
 
-@app.route('/verificar_codigo/<correo>', methods=['GET', 'POST'])
-def verificar_codigo(correo):
+@app.route('/validar_codigo', methods=['GET', 'POST'])
+def validar_codigo():
+    correo = request.args.get('correo')
+    if not correo:
+        return redirect('/recuperar')
     if request.method == 'POST':
-        codigo = request.form['codigo']
-        if codes.get(correo) == codigo:
-            return redirect(url_for('nueva_contraseña', correo=correo))
+        codigo_ingresado = request.form['codigo']
+        if recuperacion_codigos.get(correo) == codigo_ingresado:
+            return redirect(f'/nueva_clave?correo={correo}')
         else:
-            return "Código incorrecto."
-    return render_template('verificar_codigo.html', correo=correo)
+            flash("Código incorrecto.")
+    return render_template('validar_codigo.html', correo=correo)
 
-@app.route('/nueva_contraseña/<correo>', methods=['GET', 'POST'])
-def nueva_contraseña(correo):
+@app.route('/nueva_clave', methods=['GET', 'POST'])
+def nueva_clave():
+    correo = request.args.get('correo')
+    if not correo:
+        return redirect('/recuperar')
     if request.method == 'POST':
-        nueva_clave = request.form['clave']
-        if not validar_contraseña(nueva_clave):
-            return "La contraseña debe tener al menos una mayúscula, una minúscula y un carácter especial."
+        nueva_pw = request.form['nueva_clave']
+        if not validar_password(nueva_pw):
+            flash("La contraseña debe tener al menos una mayúscula, una minúscula, un carácter especial y mínimo 6 caracteres.")
+            return redirect(f'/nueva_clave?correo={correo}')
         conn = sqlite3.connect('usuarios.db')
         c = conn.cursor()
-        c.execute('UPDATE usuarios SET password=? WHERE correo=?', (nueva_clave, correo))
+        c.execute('UPDATE usuarios SET password=? WHERE correo=?', (nueva_pw, correo))
         conn.commit()
         conn.close()
-        codes.pop(correo, None)
+        recuperacion_codigos.pop(correo, None)
+        flash("Contraseña actualizada con éxito. Por favor inicia sesión.")
         return redirect('/login')
-    return render_template('nueva_contraseña.html', correo=correo)
-
-@app.route('/bienvenido')
-def bienvenido():
-    if 'usuario' in session:
-        return f"Hola {session['usuario']}! <a href='/logout'>Cerrar sesión</a>"
-    else:
-        return redirect('/login')
-
-@app.route('/logout')
-def logout():
-    session.pop('usuario', None)
-    return redirect('/login')
+    return render_template('nueva_clave.html', correo=correo)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
