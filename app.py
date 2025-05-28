@@ -137,14 +137,28 @@ def recuperar():
 @app.route('/validar_codigo', methods=['GET', 'POST'])
 def validar_codigo():
     correo = request.args.get('correo')
+
+    # Si no se proporciona el correo, redirige a la página de recuperación
     if not correo:
-        return redirect('/recuperar')
+        flash("Correo no especificado. Intenta de nuevo.")
+        return redirect(url_for('recuperar'))  # Usa url_for en lugar de ruta fija
+
     if request.method == 'POST':
-        codigo_ingresado = request.form['codigo']
-        if recuperacion_codigos.get(correo) == codigo_ingresado:
-            return redirect(f'/nueva_clave?correo={correo}')
+        codigo_ingresado = request.form.get('codigo', '').strip()
+
+        # Verifica si el código existe para ese correo
+        codigo_correcto = recuperacion_codigos.get(correo)
+        if not codigo_correcto:
+            flash("No se encontró un código para este correo. Solicita uno nuevo.")
+            return redirect(url_for('recuperar'))
+
+        if codigo_correcto == codigo_ingresado:
+            # Si el código es correcto, borra el código y redirige
+            recuperacion_codigos.pop(correo, None)
+            return redirect(url_for('nueva_clave', correo=correo))
         else:
-            flash("Código incorrecto.")
+            flash("Código incorrecto. Inténtalo de nuevo.")
+
     return render_template('validar_codigo.html', correo=correo)
 
 @app.route('/nueva_clave', methods=['GET', 'POST'])

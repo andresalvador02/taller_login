@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
     <title>Validar código</title>
 </head>
 <body>
     <h2>Validar código de recuperación</h2>
-    <p>Se envió un código a tu correo: <strong>{{ correo }}</strong></p>
+
+    {% if correo %}
+        <p>Se envió un código a tu correo: <strong>{{ correo }}</strong></p>
+    {% else %}
+        <p style="color:red;">No se pudo determinar el correo. Intenta de nuevo desde el formulario anterior.</p>
+    {% endif %}
+
+    <!-- Mostrar mensajes flash -->
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         <ul style="color:red;">
@@ -16,11 +23,16 @@
         </ul>
       {% endif %}
     {% endwith %}
-    <form method="post" action="/validar_codigo?correo={{ correo }}">
-        <label for="codigo">Código:</label><br/>
-        <input type="text" name="codigo" id="codigo" maxlength="6" required /><br/><br/>
-        <button type="submit">Validar código</button>
-    </form>
+
+    <!-- Solo mostrar el formulario si hay un correo válido -->
+    {% if correo %}
+        <form method="post" action="/validar_codigo?correo={{ correo }}">
+            <label for="codigo">Código:</label><br>
+            <input type="text" name="codigo" id="codigo" maxlength="6" required><br><br>
+            <button type="submit">Validar código</button>
+        </form>
+    {% endif %}
+
     <p><a href="/recuperar">Volver a solicitar código</a></p>
 </body>
 </html>
