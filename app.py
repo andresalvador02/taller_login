@@ -12,6 +12,9 @@ def crear_db():
     conn.commit()
     conn.close()
 
+# Esta línea asegura que la base de datos se cree incluso cuando gunicorn importa el módulo
+crear_db()
+
 @app.route('/')
 def inicio():
     return redirect('/login')
@@ -40,9 +43,13 @@ def registro():
         clave = request.form['clave']
         conn = sqlite3.connect('usuarios.db')
         c = conn.cursor()
-        c.execute('INSERT INTO usuarios (username, password) VALUES (?, ?)', (usuario, clave))
-        conn.commit()
-        conn.close()
+        try:
+            c.execute('INSERT INTO usuarios (username, password) VALUES (?, ?)', (usuario, clave))
+            conn.commit()
+        except sqlite3.IntegrityError:
+            return "El usuario ya existe."
+        finally:
+            conn.close()
         return redirect('/login')
     return render_template('registro.html')
 
@@ -59,6 +66,5 @@ def logout():
     return redirect('/login')
 
 if __name__ == '__main__':
-    crear_db()
     port = int(os.environ.get('PORT', 8000))
     app.run(host='0.0.0.0', port=port)
