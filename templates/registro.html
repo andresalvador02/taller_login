@@ -2,15 +2,16 @@
 <html>
 <head>
     <title>Registro</title>
-    <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
-    <h2>Crear cuenta</h2>
+    <h2>Registro de usuario</h2>
     <form method="POST">
-        Usuario: <input type="text" name="usuario"><br>
-        Contraseña: <input type="password" name="clave"><br>
+        Usuario: <input type="text" name="usuario" required><br><br>
+        Correo: <input type="email" name="correo" required><br><br>
+        Contraseña: <input type="password" name="clave" required><br><br>
+        <p>La contraseña debe tener al menos una mayúscula, una minúscula y un carácter especial.</p>
         <input type="submit" value="Registrarse">
     </form>
-    <a href="/login">Volver al login</a>
+    <a href="/login">Iniciar sesión</a>
 </body>
 </html>
