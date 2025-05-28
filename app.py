@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, flash
+from flask import Flask, render_template, request, redirect, session, flash, url_for
 import sqlite3
 import os
 import re
@@ -39,7 +39,7 @@ crear_db()
 
 def validar_password(pw):
     # Debe contener al menos una mayúscula, una minúscula y un carácter especial
-    if (len(pw) < 6):  # mínimo 6 caracteres
+    if len(pw) < 6:  # mínimo 6 caracteres
         return False
     if not re.search(r'[A-Z]', pw):
         return False
@@ -57,7 +57,7 @@ def enviar_codigo(correo, codigo):
 
 @app.route('/')
 def inicio():
-    return redirect('/login')
+    return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -71,7 +71,7 @@ def login():
         conn.close()
         if data:
             session['correo'] = correo
-            return redirect('/bienvenido')
+            return redirect(url_for('bienvenido'))
         else:
             flash("Credenciales incorrectas")
     return render_template('login.html')
@@ -84,7 +84,7 @@ def registro():
 
         if not validar_password(clave):
             flash("La contraseña debe tener al menos una mayúscula, una minúscula, un carácter especial y mínimo 6 caracteres.")
-            return redirect('/registro')
+            return redirect(url_for('registro'))
 
         conn = sqlite3.connect('usuarios.db')
         c = conn.cursor()
@@ -94,23 +94,23 @@ def registro():
             flash("Registro exitoso, ya puedes iniciar sesión")
         except sqlite3.IntegrityError:
             flash("El correo ya está registrado.")
-            return redirect('/registro')
+            return redirect(url_for('registro'))
         finally:
             conn.close()
-        return redirect('/login')
+        return redirect(url_for('login'))
     return render_template('registro.html')
 
 @app.route('/bienvenido')
 def bienvenido():
     if 'correo' in session:
-        return f"Hola {session['correo']}! <a href='/logout'>Cerrar sesión</a>"
+        return f"Hola {session['correo']}! <a href='{url_for('logout')}'>Cerrar sesión</a>"
     else:
-        return redirect('/login')
+        return redirect(url_for('login'))
 
 @app.route('/logout')
 def logout():
     session.pop('correo', None)
-    return redirect('/login')
+    return redirect(url_for('login'))
 
 @app.route('/recuperar', methods=['GET', 'POST'])
 def recuperar():
@@ -127,7 +127,7 @@ def recuperar():
             try:
                 enviar_codigo(correo, codigo)
                 flash("Código enviado a tu correo.")
-                return redirect(f'/validar_codigo?correo={correo}')
+                return redirect(url_for('validar_codigo', correo=correo))
             except Exception as e:
                 flash(f"Error al enviar correo: {e}")
         else:
@@ -141,7 +141,7 @@ def validar_codigo():
     # Si no se proporciona el correo, redirige a la página de recuperación
     if not correo:
         flash("Correo no especificado. Intenta de nuevo.")
-        return redirect(url_for('recuperar'))  # Usa url_for en lugar de ruta fija
+        return redirect(url_for('recuperar'))
 
     if request.method == 'POST':
         codigo_ingresado = request.form.get('codigo', '').strip()
@@ -165,12 +165,12 @@ def validar_codigo():
 def nueva_clave():
     correo = request.args.get('correo')
     if not correo:
-        return redirect('/recuperar')
+        return redirect(url_for('recuperar'))
     if request.method == 'POST':
         nueva_pw = request.form['nueva_clave']
         if not validar_password(nueva_pw):
             flash("La contraseña debe tener al menos una mayúscula, una minúscula, un carácter especial y mínimo 6 caracteres.")
-            return redirect(f'/nueva_clave?correo={correo}')
+            return redirect(url_for('nueva_clave', correo=correo))
         conn = sqlite3.connect('usuarios.db')
         c = conn.cursor()
         c.execute('UPDATE usuarios SET password=? WHERE correo=?', (nueva_pw, correo))
@@ -178,7 +178,7 @@ def nueva_clave():
         conn.close()
         recuperacion_codigos.pop(correo, None)
         flash("Contraseña actualizada con éxito. Por favor inicia sesión.")
-        return redirect('/login')
+        return redirect(url_for('login'))
     return render_template('nueva_clave.html', correo=correo)
 
 if __name__ == '__main__':
