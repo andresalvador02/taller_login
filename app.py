@@ -10,8 +10,8 @@ app.secret_key = os.urandom(24)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'andretellos@gmail.com'  # tu correo Gmail
-app.config['MAIL_PASSWORD'] = 'unbm vsnd otld oeka'     # tu contraseña de aplicación
+app.config['MAIL_USERNAME'] = 'andretellos@gmail.com'
+app.config['MAIL_PASSWORD'] = 'unbm vsnd otld oeka'  # Reemplaza por variable de entorno para producción
 app.config['MAIL_DEFAULT_SENDER'] = 'andretellos@gmail.com'
 
 mail = Mail(app)
@@ -114,7 +114,7 @@ def pago():
             total = sum(float(j['precio']) for j in carrito)
             return render_template('pago.html', carrito=carrito, total=total)
 
-        # ✅ Enviar correo de confirmación
+        # 📨 Enviar correo de confirmación
         try:
             total = sum(float(j['precio']) for j in carrito)
             lista_juegos = '\n'.join(f"- {j['nombre']} (S/ {j['precio']})" for j in carrito)
@@ -126,7 +126,7 @@ def pago():
             )
             mail.send(mensaje)
         except Exception as e:
-            flash("⚠️ No se pudo enviar el correo de confirmación.")
+            flash(f"⚠️ No se pudo enviar el correo: {str(e)}")
 
         session.pop('carrito', None)
         return render_template('confirmacion.html', nombre=nombre)
