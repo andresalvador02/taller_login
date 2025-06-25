@@ -96,5 +96,7 @@ def pago():
 def confirmacion():
     return render_template('confirmacion.html')
 
+# ✅ Corrección para Azure: usar host 0.0.0.0 y el puerto definido por Azure
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 8000))
+    app.run(host='0.0.0.0', port=port)
