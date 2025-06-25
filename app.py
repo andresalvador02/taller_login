@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, flash, url_for
 import os
+import re
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Clave para sesiones
@@ -80,12 +81,31 @@ def pago():
         return redirect(url_for('catalogo'))
 
     if request.method == 'POST':
-        nombre = request.form['nombre']
-        tarjeta = request.form['tarjeta']
-        cvv = request.form['cvv']
-        vencimiento = request.form['vencimiento']
+        nombre = request.form.get('nombre', '').strip()
+        tarjeta = request.form.get('tarjeta', '').strip()
+        cvv = request.form.get('cvv', '').strip()
+        vencimiento = request.form.get('expiracion', '').strip()
 
-        # Aquí iría el procesamiento real del pago
+        errores = []
+
+        if not nombre:
+            errores.append("El nombre es obligatorio.")
+
+        if not re.fullmatch(r'\d{16}', tarjeta):
+            errores.append("El número de tarjeta debe tener 16 dígitos.")
+
+        if not re.fullmatch(r'\d{2}/\d{2}', vencimiento):
+            errores.append("La fecha de expiración debe tener formato MM/AA.")
+
+        if not re.fullmatch(r'\d{3,4}', cvv):
+            errores.append("El CVV debe tener 3 o 4 dígitos.")
+
+        if errores:
+            for error in errores:
+                flash(error)
+            total = sum(float(j['precio']) for j in carrito)
+            return render_template('pago.html', carrito=carrito, total=total)
+
         session.pop('carrito', None)
         return render_template('confirmacion.html', nombre=nombre)
 
@@ -96,7 +116,7 @@ def pago():
 def confirmacion():
     return render_template('confirmacion.html')
 
-# ✅ Azure y desarrollo local
+# Azure y desarrollo local
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
     app.run(host='0.0.0.0', port=port, debug=True)
