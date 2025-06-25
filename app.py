@@ -11,7 +11,7 @@ app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'andretellos@gmail.com'
-app.config['MAIL_PASSWORD'] = 'unbm vsnd otld oeka'  # Considera usar variable de entorno en producción
+app.config['MAIL_PASSWORD'] = 'unbm vsnd otld oeka'  # Considera usar variable de entorno
 app.config['MAIL_DEFAULT_SENDER'] = 'andretellos@gmail.com'
 
 mail = Mail(app)
@@ -70,19 +70,29 @@ def agregar_carrito(nombre_juego):
     if 'carrito' not in session:
         session['carrito'] = []
 
-    for juego in juegos_disponibles():
-        if juego['nombre'] == nombre_juego:
-            session['carrito'].append(juego)
-            session.modified = True
-            flash(f"{juego['nombre']} añadido al carrito.")
-            break
+    carrito = session['carrito']
 
+    for item in carrito:
+        if item['nombre'] == nombre_juego:
+            item['cantidad'] += 1
+            break
+    else:
+        for juego in juegos_disponibles():
+            if juego['nombre'] == nombre_juego:
+                nuevo = juego.copy()
+                nuevo['cantidad'] = 1
+                carrito.append(nuevo)
+                break
+
+    session['carrito'] = carrito
+    session.modified = True
+    flash(f"{nombre_juego} añadido al carrito.")
     return redirect(url_for('catalogo'))
 
 @app.route('/carrito')
 def carrito():
     carrito = session.get('carrito', [])
-    total = sum(float(j['precio']) for j in carrito)
+    total = sum(float(j['precio']) * j['cantidad'] for j in carrito)
     return render_template('carrito.html', carrito=carrito, total=total)
 
 @app.route('/pago', methods=['GET', 'POST'])
@@ -93,6 +103,7 @@ def pago():
 
     if request.method == 'POST':
         nombre = request.form.get('nombre', '').strip()
+        correo = request.form.get('email', '').strip()
         tarjeta = request.form.get('tarjeta', '').strip()
         cvv = request.form.get('cvv', '').strip()
         vencimiento = request.form.get('expiracion', '').strip()
@@ -107,21 +118,22 @@ def pago():
             errores.append("La fecha de expiración debe tener formato MM/AA.")
         if not re.fullmatch(r'\d{3,4}', cvv):
             errores.append("El CVV debe tener 3 o 4 dígitos.")
+        if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", correo):
+            errores.append("Correo electrónico inválido.")
 
         if errores:
             for error in errores:
                 flash(error)
-            total = sum(float(j['precio']) for j in carrito)
+            total = sum(float(j['precio']) * j['cantidad'] for j in carrito)
             return render_template('pago.html', carrito=carrito, total=total)
 
-        # 📨 Enviar correo
         try:
-            total = sum(float(j['precio']) for j in carrito)
-            lista_juegos = '\n'.join(f"- {j['nombre']} (S/ {j['precio']})" for j in carrito)
+            total = sum(float(j['precio']) * j['cantidad'] for j in carrito)
+            lista_juegos = '\n'.join(f"- {j['nombre']} x{j['cantidad']} (S/ {j['precio']})" for j in carrito)
 
             mensaje = Message(
                 subject="🎮 Confirmación de compra - GameZone",
-                recipients=["diego.telloso@usil.pe"],
+                recipients=[correo],
                 body=f"¡Hola {nombre}!\n\nGracias por tu compra en GameZone. Aquí está el resumen:\n\n{lista_juegos}\n\nTotal: S/ {total:.2f}\n\n¡Que disfrutes tus juegos!"
             )
             mail.send(mensaje)
@@ -131,7 +143,7 @@ def pago():
         session.pop('carrito', None)
         return render_template('confirmacion.html', nombre=nombre)
 
-    total = sum(float(j['precio']) for j in carrito)
+    total = sum(float(j['precio']) * j['cantidad'] for j in carrito)
     return render_template('pago.html', carrito=carrito, total=total)
 
 @app.route('/confirmacion')
