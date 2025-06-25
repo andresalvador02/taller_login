@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>🛒 Carrito de Compras</title>
+    <title>💳 Pago</title>
     <style>
         body {
             background-color: #060F1F;
@@ -14,78 +14,123 @@
         h1 {
             color: #FFFFFF;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #1A2735;
-            padding: 12px;
-            text-align: left;
-        }
-        th {
+        form {
             background-color: #0D1B2A;
-            color: #00BCD4;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            margin: 0 auto;
         }
-        td {
-            background-color: #0F1D33;
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
         }
-        .total {
-            font-size: 20px;
-            font-weight: bold;
-            color: #33D4C9;
+        input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background-color: #1A2735;
+            color: white;
+        }
+        .botones {
             margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
         }
-        .acciones {
-            margin-top: 30px;
-        }
-        .acciones a {
-            text-decoration: none;
-            padding: 12px 20px;
+        .botones a, .botones button {
+            padding: 10px 20px;
             border-radius: 6px;
-            margin-right: 10px;
+            border: none;
             font-weight: bold;
-            display: inline-block;
+            cursor: pointer;
+            text-decoration: none;
         }
-        .volver {
+        .cancelar {
             background-color: #33D4C9;
             color: #060F1F;
         }
-        .pagar {
+        .confirmar {
             background-color: #00BCD4;
             color: white;
+        }
+        .errores {
+            background-color: #FF4C4C;
+            color: white;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 20px auto;
+            max-width: 500px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-    <h1>🛒 Tu Carrito</h1>
+    <h1>💳 Detalles de Pago</h1>
 
-    {% if carrito %}
-    <table>
-        <tr>
-            <th>Juego</th>
-            <th>Precio</th>
-        </tr>
-        {% for item in carrito %}
-        <tr>
-            <td>{{ item['nombre'] }}</td>
-            <td>S/ {{ item['precio'] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="errores">
+          <ul>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    {% endwith %}
 
-    <p class="total">Total: S/ {{ total }}</p>
+    <form method="post" action="{{ url_for('pago') }}" onsubmit="return validarFormulario()">
+        <label for="nombre">Nombre del titular</label>
+        <input type="text" name="nombre" id="nombre" required>
 
-    <div class="acciones">
-        <a href="{{ url_for('catalogo') }}" class="volver">⬅️ Seguir Comprando</a>
-        <a href="{{ url_for('pago') }}" class="pagar">💳 Ir a Pagar</a>
-    </div>
+        <label for="tarjeta">Número de tarjeta</label>
+        <input type="text" name="tarjeta" id="tarjeta" maxlength="16" required>
 
-    {% else %}
-        <p>Tu carrito está vacío. <a href="{{ url_for('catalogo') }}" style="color:#33D4C9;">Volver al catálogo</a></p>
-    {% endif %}
+        <label for="expiracion">Fecha de expiración (MM/AA)</label>
+        <input type="text" name="expiracion" id="expiracion" placeholder="MM/AA" required>
+
+        <label for="cvv">CVV</label>
+        <input type="password" name="cvv" id="cvv" maxlength="4" required>
+
+        <div class="botones">
+            <a href="{{ url_for('carrito') }}" class="cancelar">⬅️ Cancelar</a>
+            <button type="submit" class="confirmar">✅ Confirmar Pago</button>
+        </div>
+    </form>
+
+    <script>
+        function validarFormulario() {
+            const nombre = document.getElementById("nombre").value.trim();
+            const tarjeta = document.getElementById("tarjeta").value.trim();
+            const expiracion = document.getElementById("expiracion").value.trim();
+            const cvv = document.getElementById("cvv").value.trim();
+
+            if (!/^\d{16}$/.test(tarjeta)) {
+                alert("El número de tarjeta debe tener exactamente 16 dígitos.");
+                return false;
+            }
+
+            if (!/^\d{2}\/\d{2}$/.test(expiracion)) {
+                alert("La fecha de expiración debe tener el formato MM/AA.");
+                return false;
+            }
+
+            if (!/^\d{3,4}$/.test(cvv)) {
+                alert("El CVV debe tener 3 o 4 dígitos numéricos.");
+                return false;
+            }
+
+            if (nombre === "") {
+                alert("Por favor, ingresa el nombre del titular.");
+                return false;
+            }
+
+            return true;
+        }
+    </script>
 
 </body>
 </html>
