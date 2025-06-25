@@ -121,7 +121,7 @@ def pago():
 
             mensaje = Message(
                 subject="🎮 Confirmación de compra - GameZone",
-                recipients=["andretellos@gmail.com"],
+                recipients=["diego.telloso@usil.pe"],
                 body=f"¡Hola {nombre}!\n\nGracias por tu compra en GameZone. Aquí está el resumen:\n\n{lista_juegos}\n\nTotal: S/ {total:.2f}\n\n¡Que disfrutes tus juegos!"
             )
             mail.send(mensaje)
