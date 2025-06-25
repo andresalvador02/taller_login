@@ -11,7 +11,7 @@ app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'andretellos@gmail.com'
-app.config['MAIL_PASSWORD'] = 'unbm vsnd otld oeka'  # Reemplaza por variable de entorno para producción
+app.config['MAIL_PASSWORD'] = 'unbm vsnd otld oeka'  # Considera usar variable de entorno en producción
 app.config['MAIL_DEFAULT_SENDER'] = 'andretellos@gmail.com'
 
 mail = Mail(app)
@@ -114,7 +114,7 @@ def pago():
             total = sum(float(j['precio']) for j in carrito)
             return render_template('pago.html', carrito=carrito, total=total)
 
-        # 📨 Enviar correo de confirmación
+        # 📨 Enviar correo
         try:
             total = sum(float(j['precio']) for j in carrito)
             lista_juegos = '\n'.join(f"- {j['nombre']} (S/ {j['precio']})" for j in carrito)
