@@ -6,7 +6,7 @@ name: 'Build and deploy Python app to Azure Web App: flaskloginapp12345'
 on:
   push:
     branches:
-    - main
+      - main
   workflow_dispatch:
 
 jobs:
@@ -14,22 +14,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Set up Python version
-      uses: actions/setup-python@v1
-      with:
-        python-version: '3.9'
+      - name: Set up Python version
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.9'
 
-    - name: Build using AppService-Build
-      uses: azure/appservice-build@v2
-      with:
-        platform: python
-        platform-version: '3.9'
+      - name: Build using AppService-Build
+        uses: azure/appservice-build@v2
+        with:
+          platform: python
+          platform-version: '3.9'
+          source-directory: .   # ✅ Aquí indicamos la raíz del proyecto
 
-    - name: 'Deploy to Azure Web App'
-      uses: azure/webapps-deploy@v2
-      with: 
-        app-name: 'flaskloginapp12345'
-        slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppS
+      - name: 'Deploy to Azure Web App'
+        uses: azure/webapps-deploy@v2
+        with: 
+          app-name: 'flaskloginapp12345'
+          slot-name: 'production'
+          publish-profile: ${{ secrets.AzureAppService_PublishProfile_4497624aff724202968f0e27fef7e778 }}
