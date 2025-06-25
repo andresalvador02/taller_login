@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>💳 Pago</title>
+    <style>
+        body {
+            background-color: #060F1F;
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #FFFFFF;
+        }
+        form {
+            background-color: #0D1B2A;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background-color: #1A2735;
+            color: white;
+        }
+        .botones {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .botones a, .botones button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .cancelar {
+            background-color: #33D4C9;
+            color: #060F1F;
+        }
+        .confirmar {
+            background-color: #00BCD4;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>💳 Detalles de Pago</h1>
+
+    <form method="post" action="{{ url_for('pago') }}">
+        <label for="nombre">Nombre del titular</label>
+        <input type="text" name="nombre" id="nombre" required>
+
+        <label for="tarjeta">Número de tarjeta</label>
+        <input type="text" name="tarjeta" id="tarjeta" maxlength="16" required>
+
+        <label for="vencimiento">Fecha de expiración (MM/AA)</label>
+        <input type="text" name="vencimiento" id="vencimiento" required>
+
+        <label for="cvv">CVV</label>
+        <input type="password" name="cvv" id="cvv" maxlength="4" required>
+
+        <div class="botones">
+            <a href="{{ url_for('carrito') }}" class="cancelar">⬅️ Cancelar</a>
+            <button type="submit" class="confirmar">✅ Confirmar Pago</button>
+        </div>
+    </form>
+
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>GameZone - Inicio</title>
+    <style>
+        body {
+            background-color: #060F1F; /* Fondo principal */
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #0D1B2A;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #00BCD4;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            color: #00BCD4;
+        }
+
+        .contenido {
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .contenido h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #FFFFFF;
+        }
+
+        .contenido p {
+            font-size: 1.1rem;
+            color: #CCCCCC;
+            margin-bottom: 40px;
+        }
+
+        .btn-catalogo {
+            background-color: #00BCD4;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .btn-catalogo:hover {
+            background-color: #33D4C9;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🎮 GameZone</h1>
+    </header>
+
+    <div class="contenido">
+        <h2>Bienvenido a la mejor tienda de videojuegos</h2>
+        <p>Explora un mundo lleno de aventuras, combates, deportes y velocidad. ¡Elige tu juego favorito y empieza a jugar!</p>
+        <a href="{{ url_for('catalogo') }}" class="btn-catalogo">Ver Catálogo</a>
+    </div>
+
+    <footer>
+        &copy; 2025 GameZone. Todos los derechos reservados.
+    </footer>
+
+</body>
+</html>

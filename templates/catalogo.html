@@ -1,0 +1,105 @@
+<!-- templates/catalogo.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Catálogo de Juegos</title>
+    <style>
+        body {
+            background-color: #060F1F;
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .producto {
+            border: 1px solid #1A2735;
+            border-radius: 10px;
+            margin-bottom: 40px;
+            overflow: hidden;
+            display: flex;
+            background-color: #0D1B2A;
+        }
+        .producto img {
+            width: 300px;
+            height: auto;
+            object-fit: cover;
+        }
+        .info {
+            padding: 20px;
+            flex: 1;
+        }
+        h3 {
+            margin-top: 0;
+            color: #FFFFFF;
+        }
+        .precio {
+            color: #33D4C9;
+            font-weight: bold;
+        }
+        .acciones {
+            margin-top: 10px;
+        }
+        .acciones button {
+            background-color: #00BCD4;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin-right: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .acciones button.reservar {
+            background-color: #33D4C9;
+        }
+        .acciones button:hover {
+            opacity: 0.9;
+        }
+        .top-bar {
+            margin-bottom: 20px;
+        }
+        .carrito-link {
+            color: #00BCD4;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <h1 style="color: #FFFFFF;">🎮 Catálogo de Videojuegos</h1>
+        <a href="{{ url_for('carrito') }}" class="carrito-link">🛒 Ver Carrito</a>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul style="color: #33D4C9; font-weight: bold;">
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    {% for juego in juegos %}
+    <div class="producto">
+        <img src="{{ url_for('static', filename='img/' + juego.imagen) }}" alt="{{ juego.nombre }}">
+        <div class="info">
+            <h3>{{ juego.icono }} {{ juego.nombre }} – <span class="precio">S/ {{ juego.precio }}</span></h3>
+            <p>{{ juego.descripcion }}</p>
+            <p><strong>📌 Plataforma:</strong> {{ juego.plataformas }}</p>
+            <p><strong>🎮 Género:</strong> {{ juego.genero }}</p>
+            <div class="acciones">
+                <form method="POST" action="{{ url_for('agregar_carrito', nombre_juego=juego.nombre) }}">
+                    <button type="submit">Añadir al 🛒</button>
+                </form>
+                <button class="reservar" onclick="alert('Juego reservado')">Reservar ✅</button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+</body>
+</html>

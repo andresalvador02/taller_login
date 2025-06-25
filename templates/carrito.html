@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>🛒 Carrito de Compras</title>
+    <style>
+        body {
+            background-color: #060F1F;
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #FFFFFF;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #1A2735;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #0D1B2A;
+            color: #00BCD4;
+        }
+        td {
+            background-color: #0F1D33;
+        }
+        .total {
+            font-size: 20px;
+            font-weight: bold;
+            color: #33D4C9;
+            margin-top: 20px;
+        }
+        .acciones {
+            margin-top: 30px;
+        }
+        .acciones a {
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin-right: 10px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .volver {
+            background-color: #33D4C9;
+            color: #060F1F;
+        }
+        .pagar {
+            background-color: #00BCD4;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🛒 Tu Carrito</h1>
+
+    {% if carrito %}
+    <table>
+        <tr>
+            <th>Juego</th>
+            <th>Precio</th>
+        </tr>
+        {% for item in carrito %}
+        <tr>
+            <td>{{ item['nombre'] }}</td>
+            <td>S/ {{ item['precio'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <p class="total">Total: S/ {{ total }}</p>
+
+    <div class="acciones">
+        <a href="{{ url_for('catalogo') }}" class="volver">⬅️ Seguir Comprando</a>
+        <a href="{{ url_for('pago') }}" class="pagar">💳 Ir a Pagar</a>
+    </div>
+
+    {% else %}
+        <p>Tu carrito está vacío. <a href="{{ url_for('catalogo') }}" style="color:#33D4C9;">Volver al catálogo</a></p>
+    {% endif %}
+
+</body>
+</html>

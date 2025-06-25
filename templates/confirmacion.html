@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>✅ Confirmación de Pago</title>
+    <style>
+        body {
+            background-color: #060F1F;
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 40px;
+        }
+        .mensaje {
+            background-color: #0D1B2A;
+            padding: 30px;
+            border-radius: 10px;
+            display: inline-block;
+            max-width: 600px;
+        }
+        h1 {
+            color: #00BCD4;
+        }
+        p {
+            margin-top: 20px;
+        }
+        a {
+            display: inline-block;
+            margin-top: 30px;
+            text-decoration: none;
+            background-color: #33D4C9;
+            color: #060F1F;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mensaje">
+        <h1>✅ ¡Gracias por tu compra!</h1>
+        <p>Gracias, <strong>{{ nombre }}</strong>, por tu compra.</p>
+        <p>Tu pago ha sido procesado con éxito.</p>
+        <p>Pronto recibirás un correo con los detalles de tu pedido.</p>
+        <a href="{{ url_for('catalogo') }}">Volver al Catálogo</a>
+    </div>
+
+</body>
+</html>
