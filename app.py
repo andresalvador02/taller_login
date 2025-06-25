@@ -1,9 +1,20 @@
 from flask import Flask, render_template, request, redirect, session, flash, url_for
+from flask_mail import Mail, Message
 import os
 import re
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  # Clave para sesiones
+app.secret_key = os.urandom(24)
+
+# Configuración de Flask-Mail
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'andretellos@gmail.com'  # tu correo Gmail
+app.config['MAIL_PASSWORD'] = 'unbm vsnd otld oeka'     # tu contraseña de aplicación
+app.config['MAIL_DEFAULT_SENDER'] = 'andretellos@gmail.com'
+
+mail = Mail(app)
 
 def juegos_disponibles():
     return [
@@ -90,13 +101,10 @@ def pago():
 
         if not nombre:
             errores.append("El nombre es obligatorio.")
-
         if not re.fullmatch(r'\d{16}', tarjeta):
             errores.append("El número de tarjeta debe tener 16 dígitos.")
-
         if not re.fullmatch(r'\d{2}/\d{2}', vencimiento):
             errores.append("La fecha de expiración debe tener formato MM/AA.")
-
         if not re.fullmatch(r'\d{3,4}', cvv):
             errores.append("El CVV debe tener 3 o 4 dígitos.")
 
@@ -105,6 +113,20 @@ def pago():
                 flash(error)
             total = sum(float(j['precio']) for j in carrito)
             return render_template('pago.html', carrito=carrito, total=total)
+
+        # ✅ Enviar correo de confirmación
+        try:
+            total = sum(float(j['precio']) for j in carrito)
+            lista_juegos = '\n'.join(f"- {j['nombre']} (S/ {j['precio']})" for j in carrito)
+
+            mensaje = Message(
+                subject="🎮 Confirmación de compra - GameZone",
+                recipients=["andretellos@gmail.com"],
+                body=f"¡Hola {nombre}!\n\nGracias por tu compra en GameZone. Aquí está el resumen:\n\n{lista_juegos}\n\nTotal: S/ {total:.2f}\n\n¡Que disfrutes tus juegos!"
+            )
+            mail.send(mensaje)
+        except Exception as e:
+            flash("⚠️ No se pudo enviar el correo de confirmación.")
 
         session.pop('carrito', None)
         return render_template('confirmacion.html', nombre=nombre)
@@ -116,7 +138,6 @@ def pago():
 def confirmacion():
     return render_template('confirmacion.html')
 
-# Azure y desarrollo local
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
     app.run(host='0.0.0.0', port=port, debug=True)
